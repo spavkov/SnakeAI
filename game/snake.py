@@ -1,35 +1,9 @@
 from random import randint
 import pygame
-
-class PlayerDirection:
-    UP = 1
-    DOWN = 2
-    LEFT = 3
-    RIGHT = 4
-
-class PlayerMove:
-    LEFT = 1
-    RIGHT = 2
-
-class Player:
-    def __init__(self, game):
-        self.cells = [[10,10]]
-        self.direction = PlayerDirection.UP
-        print ("Player created at " + str(self.cells[0][0]) + "," + str(self.cells[0][1]))
-
-class Apple:
-    def __init__(self, game):
-        self.game = game
-        self.findStartPos()
-        print ("apple created at " + str(self.x) + "," + str(self.y))
-
-    def findStartPos(self):
-        needNewPosition = True
-        while (needNewPosition):
-            self.x = randint(1, self.game.boardWidth-2)
-            self.y = randint(1, self.game.boardHeight-2)
-            if not self.game.isCollidingWithWallOrPlayer(self.x, self.y, False):
-                needNewPosition = False
+from game.player import Player
+from game.player import PlayerDirection
+from game.player import PlayerMove
+from game.apple import Apple
 
 class SnakeGame:
     def __init__(self, boardWidth = 16, boardHeight = 16):
@@ -68,52 +42,29 @@ class SnakeGame:
             return
 
         if (move == PlayerMove.LEFT):
-            if self.player.direction == PlayerDirection.UP:
-                self.player.direction = PlayerDirection.LEFT
-            elif self.player.direction == PlayerDirection.DOWN:
-                self.player.direction = PlayerDirection.RIGHT
-            elif self.player.direction == PlayerDirection.LEFT:
-                self.player.direction = PlayerDirection.DOWN
-            else:
-                self.player.direction = PlayerDirection.UP
-
-
-        if (move == PlayerMove.RIGHT):
-            if self.player.direction == PlayerDirection.UP:
-                self.player.direction = PlayerDirection.RIGHT
-            elif self.player.direction == PlayerDirection.DOWN:
-                self.player.direction = PlayerDirection.LEFT
-            elif self.player.direction == PlayerDirection.LEFT:
-                self.player.direction = PlayerDirection.UP
-            else:
-                self.player.direction = PlayerDirection.DOWN
+            self.player.direction = PlayerDirection.LEFT
+        elif (move == PlayerMove.RIGHT):
+            self.player.direction = PlayerDirection.RIGHT
+        elif (move == PlayerMove.UP):
+            self.player.direction = PlayerDirection.UP
+        elif (move == PlayerMove.DOWN):
+            self.player.direction = PlayerDirection.DOWN
 
         self.lastCommandTime = pygame.time.get_ticks()
         self.stepCount += 1
 
-        if (self.player.direction == PlayerDirection.UP):
-            currentY = self.player.cells[0][1]
-            newHead = [self.player.cells[0][0], currentY - 1]
-            self.player.cells.insert(0, newHead)
-        elif (self.player.direction == PlayerDirection.DOWN):
-            currentY = self.player.cells[0][1]
-            newHead = [self.player.cells[0][0], currentY + 1]
-            self.player.cells.insert(0, newHead)
-        elif (self.player.direction ==  PlayerDirection.LEFT):
-            currentX = self.player.cells[0][0]
-            newHead = [currentX - 1,self.player.cells[0][1]]
-            self.player.cells.insert(0, newHead)
-        elif (self.player.direction ==  PlayerDirection.RIGHT):
-            currentX = self.player.cells[0][0]
-            newHead = [currentX + 1,self.player.cells[0][1]]
-            self.player.cells.insert(0, newHead)
+        self.player.grow()
+
+        if self.player.cells[0][0] == self.apple.x and self.player.cells[0][1] == self.apple.y:
+            self.apple.findStartPos()
+            self.score += 1
+            self.player.grow()
 
         if len(self.player.cells) > 1:
-            del(self.player.cells[0-1])
-
+            del (self.player.cells[0 - 1])
 
         self.gameOver = self.isCollidingWithWallOrPlayer(self.player.cells[0][0], self.player.cells[0][1], True)
-        print("game step " + str(self.stepCount) + " command: " + str(move) + " Game Over: " + str(self.gameOver))
+        print("game step " + str(self.stepCount) + " score: " + str(self.score) + " blocks: " + str(len(self.player.cells)))
         return (self.gameOver, self.score)
 
     def isCollidingWithWallOrPlayer(self, x, y, ignoreHead):
